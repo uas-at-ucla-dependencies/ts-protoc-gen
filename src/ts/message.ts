@@ -169,11 +169,12 @@ export function printMessage(fileName: string, exportMap: ExportMap, messageDesc
         printer.printIndentedLn(`get${withUppercase}_asB64(): string;`);
         printer.printIndentedLn(`set${withUppercase}(value: Uint8Array | string): void;`);
       } else {
+        const isOptional = !isProto2(fileDescriptor) || (field.getLabel() === FieldDescriptorProto.Label.LABEL_OPTIONAL)
         let fieldObjectType = exportType;
         let canBeUndefined = false;
         if (type === MESSAGE_TYPE) {
           fieldObjectType += ".AsObject";
-          if (!isProto2(fileDescriptor) || (field.getLabel() === FieldDescriptorProto.Label.LABEL_OPTIONAL)) {
+          if (isOptional) {
             canBeUndefined = true;
           }
         } else {
@@ -182,7 +183,7 @@ export function printMessage(fileName: string, exportMap: ExportMap, messageDesc
           }
         }
         const fieldObjectName = normaliseFieldObjectName(camelCaseName);
-        toObjectType.printIndentedLn(`${fieldObjectName}${canBeUndefined ? "?" : ""}: ${fieldObjectType},`);
+        toObjectType.printIndentedLn(`${fieldObjectName}${canBeUndefined && isOptional ? "?" : ""}: ${fieldObjectType},`);
         printer.printIndentedLn(`get${withUppercase}(): ${exportType}${canBeUndefined ? " | undefined" : ""};`);
         printer.printIndentedLn(`set${withUppercase}(value${type === MESSAGE_TYPE ? "?" : ""}: ${exportType}): void;`);
       }
